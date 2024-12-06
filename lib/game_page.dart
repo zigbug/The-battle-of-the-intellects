@@ -1,15 +1,22 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:archive/archive.dart';
 
 class GamePage extends StatefulWidget {
   final String team1Name;
   final String team2Name;
+  final String selectedPackPath;
 
-  const GamePage({Key? key, required this.team1Name, required this.team2Name})
+  const GamePage(
+      {Key? key,
+      required this.team1Name,
+      required this.team2Name,
+      required this.selectedPackPath})
       : super(key: key);
 
   @override
@@ -30,7 +37,7 @@ class _GamePageState extends State<GamePage> {
   @override
   void initState() {
     super.initState();
-    _loadTexts();
+    _loadTextsFromZip();
 
     RawKeyboard.instance.addListener(_handleKey);
   }
@@ -51,6 +58,34 @@ class _GamePageState extends State<GamePage> {
         _addScoreToTeam2();
         _stopSpeaking(); // Останавливаем воспроизведение
       }
+    }
+  }
+
+  Future<void> _loadTextsFromZip() async {
+    try {
+      final File zipFile = File(widget.selectedPackPath);
+      final bytes = await zipFile.readAsBytes();
+      final archive = ZipDecoder().decodeBytes(bytes);
+
+      List<String> loadedTexts = [];
+      for (final file in archive) {
+        if (file.isFile) {
+          final filename = file.name.toLowerCase(); // Case-insensitive matching
+          if (filename.endsWith('.txt')) {
+            // Only load .txt files
+            final content = utf8.decode(file.content as List<int>);
+            loadedTexts.add(content);
+          }
+        }
+      }
+      setState(() {
+        texts = loadedTexts;
+        isStoryRead = List.filled(texts.length, false);
+      });
+    } catch (e) {
+      print('Error loading texts from zip: $e');
+      // Handle error, maybe show a dialog or fallback to default texts
+      _loadTexts(); // Fallback to loading from assets
     }
   }
 
@@ -161,13 +196,20 @@ class _GamePageState extends State<GamePage> {
   }
 
   Future _speak(int index) async {
+    _stopSpeaking();
     if (!isStoryRead[index]) {
       setState(() {
         showArrows = true;
       });
+      var voices = await flutterTts.getVoices;
+      print(voices);
+      await flutterTts.setPitch(1.0);
+      await flutterTts.setVolume(1.0);
+
       await flutterTts.setLanguage('ru-RU');
-      await flutterTts.setVoice({"name": "Karen", "locale": 'ru-RU'});
-      await flutterTts.setSpeechRate(1.0);
+      await flutterTts
+          .setVoice({"name": "Microsoft Irina Desktop", "locale": 'ru-RU'});
+      await flutterTts.setSpeechRate(0.97);
       await flutterTts.speak(texts[index]);
     }
   }
@@ -178,6 +220,7 @@ class _GamePageState extends State<GamePage> {
   }
 
   void _addScoreToTeam1() {
+    _stopSpeaking(); // Останавливаем воспроизведение
     setState(() {
       if (showArrows && currentStoryIndex != -1) {
         team1Score++;
@@ -189,6 +232,7 @@ class _GamePageState extends State<GamePage> {
   }
 
   void _addScoreToTeam2() {
+    _stopSpeaking(); // Останавливаем воспроизведение
     setState(() {
       if (showArrows && currentStoryIndex != -1) {
         team2Score++;
