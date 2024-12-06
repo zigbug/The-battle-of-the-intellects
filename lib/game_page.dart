@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:archive/archive.dart';
 
 class GamePage extends StatefulWidget {
@@ -38,6 +38,7 @@ class _GamePageState extends State<GamePage> {
   void initState() {
     super.initState();
     _loadTextsFromZip();
+    _setOptions();
 
     RawKeyboard.instance.addListener(_handleKey);
   }
@@ -195,21 +196,27 @@ class _GamePageState extends State<GamePage> {
     );
   }
 
+  Future _setOptions() async {
+    var voices = await flutterTts.getVoices;
+    print(voices);
+
+    await flutterTts.setVolume(1.0);
+
+    await flutterTts.setLanguage('ru-RU');
+    await flutterTts
+        .setVoice({"name": "Microsoft Irina Desktop", "locale": 'ru-RU'});
+  }
+
+  // Функция для воспроизведения текста
   Future _speak(int index) async {
     _stopSpeaking();
     if (!isStoryRead[index]) {
       setState(() {
         showArrows = true;
       });
-      var voices = await flutterTts.getVoices;
-      print(voices);
-      await flutterTts.setPitch(1.0);
-      await flutterTts.setVolume(1.0);
+      await flutterTts.setPitch(Random().nextDouble() * 2.0);
 
-      await flutterTts.setLanguage('ru-RU');
-      await flutterTts
-          .setVoice({"name": "Microsoft Irina Desktop", "locale": 'ru-RU'});
-      await flutterTts.setSpeechRate(0.97);
+      await flutterTts.setSpeechRate(0.9);
       await flutterTts.speak(texts[index]);
     }
   }
