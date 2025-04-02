@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'game_page.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TeamInputPage extends StatefulWidget {
-  const TeamInputPage({Key? key}) : super(key: key);
+  const TeamInputPage({super.key});
 
   @override
   State<TeamInputPage> createState() => _TeamInputPageState();
@@ -15,11 +16,29 @@ class _TeamInputPageState extends State<TeamInputPage> {
   String? _selectedPackPath;
 
   @override
+  void initState() {
+    super.initState();
+    _loadSavedPackPath();
+  }
+
+  Future<void> _loadSavedPackPath() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedPackPath = prefs.getString('selectedPackPath');
+    });
+  }
+
+  Future<void> _savePackPath(String path) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('selectedPackPath', path);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Ввод команд'),
-      ),
+      // appBar: AppBar(
+      //   title: const Text('Ввод команд'),
+      // ),
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
@@ -32,6 +51,28 @@ class _TeamInputPageState extends State<TeamInputPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Align(
+                alignment: Alignment.topRight,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final result = await FilePicker.platform.pickFiles(
+                      allowMultiple: false,
+                      type: FileType.custom,
+                      allowedExtensions: ['zip'],
+                    );
+                    if (result != null && result.files.single.path != null) {
+                      String path = result.files.single.path!;
+                      setState(() {
+                        _selectedPackPath = path;
+                      });
+                      _savePackPath(path);
+                    }
+                  },
+                  child: const Text('Выбрать пак заданий'),
+                ),
+              ),
+              if (_selectedPackPath != null)
+                Text('Выбранный пак: $_selectedPackPath'),
               const Padding(
                 padding: EdgeInsets.only(bottom: 50.0),
                 child: Text(
@@ -64,23 +105,6 @@ class _TeamInputPageState extends State<TeamInputPage> {
                   ),
                 ),
               ),
-              ElevatedButton(
-                onPressed: () async {
-                  final result = await FilePicker.platform.pickFiles(
-                    allowMultiple: false,
-                    type: FileType.custom,
-                    allowedExtensions: ['zip'], // Allow only zip files
-                  );
-                  if (result != null && result.files.single.path != null) {
-                    setState(() {
-                      _selectedPackPath = result.files.single.path;
-                    });
-                  }
-                },
-                child: const Text('Выбрать пак заданий (zip)'),
-              ),
-              if (_selectedPackPath != null)
-                Text('Выбранный пак: $_selectedPackPath'),
               ElevatedButton(
                 onPressed: _selectedPackPath != null
                     ? () {

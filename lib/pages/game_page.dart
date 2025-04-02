@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:archive/archive.dart';
+import 'package:flutter/services.dart';
 
 class GamePage extends StatefulWidget {
   final String team1Name;
@@ -13,11 +14,10 @@ class GamePage extends StatefulWidget {
   final String selectedPackPath;
 
   const GamePage(
-      {Key? key,
+      {super.key,
       required this.team1Name,
       required this.team2Name,
-      required this.selectedPackPath})
-      : super(key: key);
+      required this.selectedPackPath});
 
   @override
   State<GamePage> createState() => _GamePageState();
@@ -30,7 +30,7 @@ class _GamePageState extends State<GamePage> {
   int team1Score = 0;
   int team2Score = 0;
   bool showArrows = false;
-  FocusNode _focusNode = FocusNode();
+  final FocusNode _focusNode = FocusNode();
   bool gameEnded = false; // Флаг окончания игры
   int currentStoryIndex = -1; // Индекс текущей истории
 
@@ -40,18 +40,18 @@ class _GamePageState extends State<GamePage> {
     _loadTextsFromZip();
     _setOptions();
 
-    RawKeyboard.instance.addListener(_handleKey);
+    HardwareKeyboard.instance.addHandler(_handleKey);
   }
 
   @override
   void dispose() {
-    RawKeyboard.instance.removeListener(_handleKey);
+    HardwareKeyboard.instance.removeHandler(_handleKey);
     _focusNode.dispose();
     super.dispose();
   }
 
-  void _handleKey(RawKeyEvent event) {
-    if (event is RawKeyDownEvent) {
+  bool _handleKey(KeyEvent event) {
+    if (event is KeyDownEvent) {
       if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
         _addScoreToTeam1();
         _stopSpeaking(); // Останавливаем воспроизведение
@@ -60,6 +60,7 @@ class _GamePageState extends State<GamePage> {
         _stopSpeaking(); // Останавливаем воспроизведение
       }
     }
+    return false;
   }
 
   Future<void> _loadTextsFromZip() async {
