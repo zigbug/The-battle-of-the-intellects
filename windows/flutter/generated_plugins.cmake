@@ -5,7 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   connectivity_plus
   flutter_tts
-  screen_retriever_windows
+  screen_retriever
   window_manager
 )
 

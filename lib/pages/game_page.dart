@@ -1,23 +1,28 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:archive/archive.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
+import '../blocs/menu/menu_bloc.dart';
+import '../services/keyboard_service.dart';
 
 class GamePage extends StatefulWidget {
   final String team1Name;
   final String team2Name;
   final String selectedPackPath;
 
-  const GamePage(
-      {super.key,
-      required this.team1Name,
-      required this.team2Name,
-      required this.selectedPackPath});
+  const GamePage({
+    super.key,
+    required this.team1Name,
+    required this.team2Name,
+    required this.selectedPackPath,
+  });
 
   @override
   State<GamePage> createState() => _GamePageState();
@@ -33,34 +38,33 @@ class _GamePageState extends State<GamePage> {
   final FocusNode _focusNode = FocusNode();
   bool gameEnded = false; // Флаг окончания игры
   int currentStoryIndex = -1; // Индекс текущей истории
+  late final KeyboardService _keyboardService;
+  late final StreamSubscription<LogicalKeyboardKey> _keySubscription;
 
   @override
   void initState() {
     super.initState();
     _loadTextsFromZip();
     _setOptions();
-
-    HardwareKeyboard.instance.addHandler(_handleKey);
+    _keyboardService = context.read<KeyboardService>();
+    _keySubscription = _keyboardService.keyStream.listen(_handleKeyPress);
   }
 
   @override
   void dispose() {
-    HardwareKeyboard.instance.removeHandler(_handleKey);
+    _keySubscription.cancel();
     _focusNode.dispose();
     super.dispose();
   }
 
-  bool _handleKey(KeyEvent event) {
-    if (event is KeyDownEvent) {
-      if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-        _addScoreToTeam1();
-        _stopSpeaking(); // Останавливаем воспроизведение
-      } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-        _addScoreToTeam2();
-        _stopSpeaking(); // Останавливаем воспроизведение
-      }
+  void _handleKeyPress(LogicalKeyboardKey key) {
+    if (key == LogicalKeyboardKey.escape) {
+      final menuBloc = context.read<MenuBloc>();
+      menuBloc.state.map(
+        initial: (_) => menuBloc.add(const MenuEvent.show()),
+        visible: (_) => menuBloc.add(const MenuEvent.hide()),
+      );
     }
-    return false;
   }
 
   Future<void> _loadTextsFromZip() async {

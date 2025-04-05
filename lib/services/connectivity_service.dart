@@ -11,15 +11,15 @@ class ConnectivityService {
   bool get isOnline => _isOnline;
 
   Future<void> initialize() async {
-    _connectivity.onConnectivityChanged.listen((results) {
-      _updateConnectivityStatus(results.first);
+    _connectivity.onConnectivityChanged.listen((result) {
+      _updateConnectivityStatus(result);
     });
     await _checkConnectivity();
   }
 
   Future<void> _checkConnectivity() async {
-    final results = await _connectivity.checkConnectivity();
-    _updateConnectivityStatus(results.first);
+    final result = await _connectivity.checkConnectivity();
+    _updateConnectivityStatus(result);
   }
 
   void _updateConnectivityStatus(ConnectivityResult result) {
@@ -27,5 +27,5 @@ class ConnectivityService {
   }
 
   Stream<bool> get onConnectivityChanged => _connectivity.onConnectivityChanged
-      .map((results) => results.first != ConnectivityResult.none);
+      .map((result) => result != ConnectivityResult.none);
 }
