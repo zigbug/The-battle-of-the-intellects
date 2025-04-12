@@ -1,25 +1,37 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 class ConnectivityService {
-  static final ConnectivityService _instance = ConnectivityService._internal();
-  factory ConnectivityService() => _instance;
-  ConnectivityService._internal();
-
   final Connectivity _connectivity = Connectivity();
   bool _isOnline = false;
+  bool _isInitialized = false;
 
   bool get isOnline => _isOnline;
+  bool get isInitialized => _isInitialized;
 
   Future<void> initialize() async {
-    _connectivity.onConnectivityChanged.listen((result) {
-      _updateConnectivityStatus(result);
-    });
-    await _checkConnectivity();
+    if (_isInitialized) return;
+
+    try {
+      _connectivity.onConnectivityChanged.listen((result) {
+        _updateConnectivityStatus(result);
+      });
+      await _checkConnectivity();
+      _isInitialized = true;
+    } catch (e) {
+      print('Error initializing connectivity service: $e');
+      _isOnline = false;
+      _isInitialized = true;
+    }
   }
 
   Future<void> _checkConnectivity() async {
-    final result = await _connectivity.checkConnectivity();
-    _updateConnectivityStatus(result);
+    try {
+      final result = await _connectivity.checkConnectivity();
+      _updateConnectivityStatus(result);
+    } catch (e) {
+      print('Error checking connectivity: $e');
+      _isOnline = false;
+    }
   }
 
   void _updateConnectivityStatus(ConnectivityResult result) {

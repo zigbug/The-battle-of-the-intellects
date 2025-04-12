@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 class KeyboardService {
   final _controller = StreamController<LogicalKeyboardKey>.broadcast();
+  final Set<PhysicalKeyboardKey> _pressedKeys = {};
 
   Stream<LogicalKeyboardKey> get keyStream => _controller.stream;
 
@@ -12,7 +13,12 @@ class KeyboardService {
 
   bool _handleKeyEvent(KeyEvent event) {
     if (event is KeyDownEvent) {
-      _controller.add(event.logicalKey);
+      if (!_pressedKeys.contains(event.physicalKey)) {
+        _pressedKeys.add(event.physicalKey);
+        _controller.add(event.logicalKey);
+      }
+    } else if (event is KeyUpEvent) {
+      _pressedKeys.remove(event.physicalKey);
     }
     return true;
   }
@@ -20,5 +26,6 @@ class KeyboardService {
   void dispose() {
     HardwareKeyboard.instance.removeHandler(_handleKeyEvent);
     _controller.close();
+    _pressedKeys.clear();
   }
 }

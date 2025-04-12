@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import 'blocs/menu/menu_bloc.dart';
+import 'pages/start_page.dart';
 import 'widgets/menu_overlay.dart';
 import 'services/window_service.dart';
 import 'services/connectivity_service.dart';
 import 'services/keyboard_service.dart';
-import 'pages/game_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,12 +57,10 @@ class MyApp extends StatelessWidget {
         ),
         home: Stack(
           children: [
-            GamePage(
-              team1Name: 'Команда 1',
-              team2Name: 'Команда 2',
-              selectedPackPath: 'default',
+            StartPage(
+              connectivityService: connectivityService,
             ),
-            const MenuOverlay(),
+            // const MenuOverlay(),
           ],
         ),
       ),

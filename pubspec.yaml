@@ -1,5 +1,6 @@
-name: uganda
-description: "A new Flutter project."
+name: battle_of_the_intellects
+description: "The Battle of the Intellects is a game that tests your knowledge of popular culture music.It's a fun way to challenge your friends and family to see who resolves more questions from AI."
+
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -15,7 +16,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_tts: ^3.8.5
-  file_picker: ^6.1.1
+  file_picker: ^6.2.1
   path: ^1.8.3
   archive: ^3.4.10
   connectivity_plus: ^5.0.2
@@ -46,4 +47,19 @@ flutter:
   assets:
     - assets/
     - assets/texts/
+
+  # Добавляем правильную конфигурацию для file_picker
+  plugin:
+    platforms:
+      android:
+        package: com.mr.flutter.plugin.filepicker
+        pluginClass: FilePickerPlugin
+      ios:
+        pluginClass: FilePickerPlugin
+      linux:
+        pluginClass: FilePickerPlugin
+      macos:
+        pluginClass: FilePickerPlugin
+      windows:
+        pluginClass: FilePickerPlugin
 
