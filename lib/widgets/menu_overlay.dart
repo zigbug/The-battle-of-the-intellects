@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:window_manager/window_manager.dart';
 import '../blocs/menu/menu_bloc.dart';
 import '../services/keyboard_service.dart';
+import '../services/window_service.dart';
 
 class MenuOverlay extends StatefulWidget {
   const MenuOverlay({super.key});
@@ -17,11 +18,14 @@ class _MenuOverlayState extends State<MenuOverlay> {
   late final KeyboardService _keyboardService;
   late final StreamSubscription<LogicalKeyboardKey> _keySubscription;
   bool _showExitDialog = false;
+  bool _showSettings = false;
+  late final WindowService _windowService;
 
   @override
   void initState() {
     super.initState();
     _keyboardService = context.read<KeyboardService>();
+    _windowService = context.read<WindowService>();
     _keySubscription = _keyboardService.keyStream.listen(_handleKeyPress);
   }
 
@@ -37,6 +41,10 @@ class _MenuOverlayState extends State<MenuOverlay> {
         setState(() {
           _showExitDialog = false;
         });
+      } else if (_showSettings) {
+        setState(() {
+          _showSettings = false;
+        });
       } else {
         final menuBloc = context.read<MenuBloc>();
         menuBloc.state.map(
@@ -45,6 +53,122 @@ class _MenuOverlayState extends State<MenuOverlay> {
         );
       }
     }
+  }
+
+  Widget _buildMainMenu() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text(
+          'Меню',
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: Colors.blue,
+          ),
+        ),
+        const SizedBox(height: 24),
+        ElevatedButton(
+          onPressed: () {
+            setState(() {
+              _showSettings = true;
+            });
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            minimumSize: const Size(200, 48),
+          ),
+          child: const Text(
+            'Настройки',
+            style: TextStyle(fontSize: 18),
+          ),
+        ),
+        const SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: () {
+            setState(() {
+              _showExitDialog = true;
+            });
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            minimumSize: const Size(200, 48),
+          ),
+          child: const Text(
+            'Выход',
+            style: TextStyle(fontSize: 18),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSettingsMenu() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text(
+          'Настройки',
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: Colors.blue,
+          ),
+        ),
+        const SizedBox(height: 24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Полноэкранный режим',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+              ),
+            ),
+            Switch(
+              value: _windowService.isFullScreen,
+              onChanged: (value) async {
+                await _windowService.toggleFullScreen();
+                setState(() {});
+              },
+              activeColor: Colors.blue,
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        ElevatedButton(
+          onPressed: () {
+            setState(() {
+              _showSettings = false;
+            });
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            minimumSize: const Size(200, 48),
+          ),
+          child: const Text(
+            'Назад',
+            style: TextStyle(fontSize: 18),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -62,6 +186,10 @@ class _MenuOverlayState extends State<MenuOverlay> {
                     setState(() {
                       _showExitDialog = false;
                     });
+                  } else if (_showSettings) {
+                    setState(() {
+                      _showSettings = false;
+                    });
                   } else {
                     context.read<MenuBloc>().add(const MenuEvent.hide());
                   }
@@ -75,7 +203,7 @@ class _MenuOverlayState extends State<MenuOverlay> {
                 child: Material(
                   color: Colors.transparent,
                   child: Container(
-                    width: 300,
+                    width: 350,
                     padding: const EdgeInsets.all(24.0),
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.8),
@@ -88,64 +216,8 @@ class _MenuOverlayState extends State<MenuOverlay> {
                         ),
                       ],
                     ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text(
-                          'Меню',
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        ElevatedButton(
-                          onPressed: () {
-                            // TODO: Добавить настройки
-                            context
-                                .read<MenuBloc>()
-                                .add(const MenuEvent.hide());
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 32, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            minimumSize: const Size(200, 48),
-                          ),
-                          child: const Text(
-                            'Настройки',
-                            style: TextStyle(fontSize: 18),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              _showExitDialog = true;
-                            });
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 32, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            minimumSize: const Size(200, 48),
-                          ),
-                          child: const Text(
-                            'Выход',
-                            style: TextStyle(fontSize: 18),
-                          ),
-                        ),
-                      ],
-                    ),
+                    child:
+                        _showSettings ? _buildSettingsMenu() : _buildMainMenu(),
                   ),
                 ),
               ),
@@ -155,7 +227,7 @@ class _MenuOverlayState extends State<MenuOverlay> {
                   child: Material(
                     color: Colors.transparent,
                     child: Container(
-                      width: 300,
+                      width: 350,
                       padding: const EdgeInsets.all(24.0),
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.8),
