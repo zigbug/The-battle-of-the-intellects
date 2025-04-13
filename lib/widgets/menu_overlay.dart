@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:async';
 import 'package:window_manager/window_manager.dart';
 import '../blocs/menu/menu_bloc.dart';
+import '../pages/start_page.dart';
+import '../services/connectivity_service.dart';
 import '../services/keyboard_service.dart';
 import '../services/window_service.dart';
 
@@ -68,6 +70,34 @@ class _MenuOverlayState extends State<MenuOverlay> {
           ),
         ),
         const SizedBox(height: 24),
+        ElevatedButton(
+          onPressed: () {
+            setState(() {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => StartPage(
+                          connectivityService:
+                              context.read<ConnectivityService>(),
+                        )),
+              );
+            });
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            minimumSize: const Size(200, 48),
+          ),
+          child: const Text(
+            'Выйти в стартовое меню',
+            style: TextStyle(fontSize: 18),
+          ),
+        ),
+        const SizedBox(height: 16),
         ElevatedButton(
           onPressed: () {
             setState(() {

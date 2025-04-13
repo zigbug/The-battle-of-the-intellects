@@ -89,6 +89,7 @@ class _TeamInputPageState extends State<TeamInputPage> {
                     padding: const EdgeInsets.all(16.0),
                     child: TextField(
                       controller: _team1Controller,
+                      autofocus: true,
                       style: const TextStyle(color: Colors.white),
                       decoration: const InputDecoration(
                         labelText: 'Команда 1',

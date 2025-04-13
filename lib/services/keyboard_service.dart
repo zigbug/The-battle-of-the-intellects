@@ -24,7 +24,7 @@ class KeyboardService {
     } else if (event is KeyUpEvent) {
       _pressedKeys.remove(event.physicalKey);
     }
-    return true;
+    return false;
   }
 
   void dispose() {
