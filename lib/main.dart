@@ -55,13 +55,16 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.blue,
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
-        home: Stack(
-          children: [
-            StartPage(
-              connectivityService: connectivityService,
-            ),
-            // const MenuOverlay(),
-          ],
+        builder: (context, child) {
+          return Stack(
+            children: [
+              child!,
+              const MenuOverlay(),
+            ],
+          );
+        },
+        home: StartPage(
+          connectivityService: connectivityService,
         ),
       ),
     );

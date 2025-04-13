@@ -11,6 +11,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import '../blocs/menu/menu_bloc.dart';
 import '../services/keyboard_service.dart';
+import '../services/window_service.dart';
 
 class GamePage extends StatefulWidget {
   final String team1Name;
@@ -40,6 +41,9 @@ class _GamePageState extends State<GamePage> {
   int currentStoryIndex = -1; // Индекс текущей истории
   late final KeyboardService _keyboardService;
   late final StreamSubscription<LogicalKeyboardKey> _keySubscription;
+  late final WindowService _windowService;
+  int _tapCount = 0;
+  Timer? _tapTimer;
 
   @override
   void initState() {
@@ -48,10 +52,12 @@ class _GamePageState extends State<GamePage> {
     _setOptions();
     _keyboardService = context.read<KeyboardService>();
     _keySubscription = _keyboardService.keyStream.listen(_handleKeyPress);
+    _windowService = context.read<WindowService>();
   }
 
   @override
   void dispose() {
+    _tapTimer?.cancel();
     _keySubscription.cancel();
     _focusNode.dispose();
     super.dispose();
@@ -60,10 +66,20 @@ class _GamePageState extends State<GamePage> {
   void _handleKeyPress(LogicalKeyboardKey key) {
     if (key == LogicalKeyboardKey.escape) {
       final menuBloc = context.read<MenuBloc>();
-      menuBloc.state.map(
-        initial: (_) => menuBloc.add(const MenuEvent.show()),
-        visible: (_) => menuBloc.add(const MenuEvent.hide()),
-      );
+      menuBloc.add(const MenuEvent.show());
+    }
+  }
+
+  void _handleDoubleTap() {
+    _tapCount++;
+    if (_tapCount == 1) {
+      _tapTimer = Timer(const Duration(milliseconds: 300), () {
+        _tapCount = 0;
+      });
+    } else if (_tapCount == 2) {
+      _tapTimer?.cancel();
+      _tapCount = 0;
+      _windowService.toggleFullScreen();
     }
   }
 
@@ -129,72 +145,90 @@ class _GamePageState extends State<GamePage> {
             fit: BoxFit.cover,
           ),
         ),
-        child: RawKeyboardListener(
-          focusNode: _focusNode,
-          autofocus: true,
-          onKey: (event) {},
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Text(
-                      '${widget.team1Name}: $team1Score',
-                      style: const TextStyle(fontSize: 20, color: Colors.white),
-                    ),
-                    Text(
-                      '${widget.team2Name}: $team2Score',
-                      style: const TextStyle(fontSize: 20, color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: texts.isEmpty
-                        ? [const CircularProgressIndicator()]
-                        : List.generate(texts.length, (index) {
-                            return Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  _speak(index);
-                                  setState(() {
-                                    currentStoryIndex = index;
-                                  });
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      isStoryRead[index] ? Colors.green : null,
-                                  foregroundColor: Colors.black,
-                                ),
-                                child: Text(
-                                  'История ${index + 1}',
-                                  style: const TextStyle(fontSize: 20),
-                                ),
-                              ),
-                            );
-                          }),
-                  ),
-                ),
-              ),
-              // Отображаем сообщение о победителе, если игра завершена
-              if (gameEnded)
+        child: GestureDetector(
+          onDoubleTap: _handleDoubleTap,
+          child: RawKeyboardListener(
+            focusNode: _focusNode,
+            autofocus: true,
+            onKey: (event) {
+              if (event is RawKeyDownEvent) {
+                if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+                  _addScoreToTeam1();
+                } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+                  _addScoreToTeam2();
+                } else if (event.logicalKey == LogicalKeyboardKey.escape) {
+                  final menuBloc = context.read<MenuBloc>();
+                  menuBloc.add(const MenuEvent.show());
+                }
+              }
+            },
+            child: Column(
+              children: [
                 Padding(
                   padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Text(
+                        '${widget.team1Name}: $team1Score',
+                        style:
+                            const TextStyle(fontSize: 20, color: Colors.white),
+                      ),
+                      Text(
+                        '${widget.team2Name}: $team2Score',
+                        style:
+                            const TextStyle(fontSize: 20, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
                   child: Center(
-                    child: Text(
-                      _getWinnerMessage(),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 20, color: Colors.white),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: texts.isEmpty
+                          ? [const CircularProgressIndicator()]
+                          : List.generate(texts.length, (index) {
+                              return Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    _speak(index);
+                                    setState(() {
+                                      currentStoryIndex = index;
+                                    });
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: isStoryRead[index]
+                                        ? Colors.green
+                                        : null,
+                                    foregroundColor: Colors.black,
+                                  ),
+                                  child: Text(
+                                    'История ${index + 1}',
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
+                                ),
+                              );
+                            }),
                     ),
                   ),
                 ),
-            ],
+                // Отображаем сообщение о победителе, если игра завершена
+                if (gameEnded)
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Center(
+                      child: Text(
+                        _getWinnerMessage(),
+                        textAlign: TextAlign.center,
+                        style:
+                            const TextStyle(fontSize: 20, color: Colors.white),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
