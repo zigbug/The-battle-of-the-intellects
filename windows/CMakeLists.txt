@@ -1,15 +1,10 @@
 # Project-level configuration.
 cmake_minimum_required(VERSION 3.14)
-project(the_battle_of_the_intellects LANGUAGES CXX)
-
-# Suppress warning about exec_program
-if(POLICY CMP0153)
-  cmake_policy(SET CMP0153 NEW)
-endif()
+project(battle_of_the_intellects LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "the_battle_of_the_intellects")
+set(BINARY_NAME "battle_of_the_intellects")
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.
