@@ -1,8 +1,10 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 
 import '../services/connectivity_service.dart';
 import 'team_input_page.dart';
 
+@RoutePage()
 class StartPage extends StatefulWidget {
   final ConnectivityService connectivityService;
   const StartPage({super.key, required this.connectivityService});

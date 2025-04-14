@@ -1,8 +1,10 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'game_page.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+@RoutePage()
 class TeamInputPage extends StatefulWidget {
   const TeamInputPage({super.key});
 

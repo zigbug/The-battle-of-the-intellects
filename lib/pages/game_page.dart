@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:async';
 
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -13,6 +14,7 @@ import '../blocs/menu/menu_bloc.dart';
 import '../services/keyboard_service.dart';
 import '../services/window_service.dart';
 
+@RoutePage()
 class GamePage extends StatefulWidget {
   final String team1Name;
   final String team2Name;
